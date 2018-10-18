@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Customers</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script type="text/javascript" src="js/jquery-1.7.2.js"></script>
+<script type="text/javascript">
+
+var vehiclesJson=[]; 
+var obj=[];
+var str="";
+var vehicleListG=[];
+
+	$(function(){
+		//initializations
+		$('#nameNum').hide();
+		$('#srchDiv').hide();
+		$('#addDiv').hide();
+		$('#updateDiv').hide();
+		$('#vdropdown').hide();
+		$('#updateCustBtn3').hide();
+		$('#insuranceDiv').hide();
+		$('#checkboxes').hide();
+		$('#deleteDiv').hide();
+		
+		$('#addBtn').on('click',function(){
+			$('#addDiv').show();
+			$('#checkboxes').show();
+			$('#nameNum').show();
+			$('#srchDiv').hide();
+			$('#msg').hide();
+			$('#updateDiv').hide();
+			$('#insuranceDiv').hide();
+			$('#deleteDiv').hide();
+		});
+		$('#retrieveBtn').on('click',function(){
+			$('#srchDiv').show();
+			$('#nameNum').hide();
+			$('#checkboxes').hide();
+			$('#addDiv').hide();
+			$('#checkboxes').hide();
+			$('#msg').hide();
+			$('#updateDiv').hide();
+			$('#insuranceDiv').hide();
+			$('#deleteDiv').hide();
+		});
+		$('#updateBtn').on('click',function(){
+			$('#updateDiv').show();
+			$('#srchDiv').hide();
+			$('#checkboxes').hide();
+			$('#nameNum').hide();
+			$('#addDiv').hide();
+			$('#msg').hide();
+			$('#insuranceDiv').hide();
+			$('#deleteDiv').hide();
+		});
+		$('#insuranceBtn').on('click',function(){
+			$('#insuranceDiv').show();
+			$('#srchDiv').hide();
+			$('#checkboxes').hide();
+			$('#nameNum').hide();
+			$('#addDiv').hide();
+			$('#msg').hide();
+			$('#updateDiv').hide();
+			$('#deleteDiv').hide();
+		});
+		$('#deleteBtn').on('click',function(){
+			$('#deleteDiv').show();
+			$('#insuranceDiv').hide();
+			$('#srchDiv').hide();
+			$('#checkboxes').hide();
+			$('#nameNum').hide();
+			$('#addDiv').hide();
+			//$('#msg').hide();
+			$('#updateDiv').hide();
+		});
+		
+		$('#srchBtn').on('click',function(){
+			//console.log("Retrieving");
+			$.get( "http://localhost:8080/AutomobileService/rest/customer/getCust?phoneNo="+$('#srchPhoneNum').val(),
+					function( data ) {
+				
+					str+="Name:";
+					str+=data['custName'];
+					str+=",Contact Number:";
+					str+=data['phoneNo'];
+					str+="\n\nService and Insurance Amount:";
+					$(data.vehicleList).each(function(i,item){
+						str+=data.vehicleList[i]['vehicleId'];
+						if(data.vehicleList[i]['polishing']) str+= " Polishing ";
+						if(data.vehicleList[i]['wheelBalancing']) str+= " Wheel Balancing ";
+						if(data.vehicleList[i]['decors']) str+= " Decoration ";
+					});				
+			});
+			setTimeout(function(){
+				$('#msg').show();
+				$('#msg').text(str);
+				}, 1000);
+			
+			
+		});
+		
+		$('#addVehicleBtn').on('click',function(){
+			obj={"vehicleId":$('#vehicleId').val(),"polishing":$('#polish').is(':checked'),
+					"wheelBalancing":$('#wheel').is(':checked'),"decors":$('#decor').is(':checked')};
+			vehiclesJson.push(obj);			
+		//	console.log(JSON.stringify(obj));
+		});
+		
+		$('#addCustBtn').on('click',function(){
+			
+			var customerName = $("#custName").val();
+			var mobileNumber = $("#phoneNo").val();
+			var cust = {"custName":customerName,"phoneNo":mobileNumber,"vehicleList":vehiclesJson};
+			
+			$.ajax({
+				url:"http://localhost:8080/AutomobileService/rest/customer/addCust",
+				type:"POST",
+				datatype:'html',
+				data:JSON.stringify(cust),
+				contentType:"application/json;charset=utf-8",
+				success:function(data,textStatus,jqXHR){	
+					$('#msg').show();
+					$("#msg").text("Customer Added!");
+				},
+				error:function(jqXHR,textStatus,errorThrown){
+					console.log(errorThrown);
+				}
+			})
+				
+		});
+		
+		$('#updateCustBtn2').on('click',function(){
+			
+			$('#nameNum').show();
+			$('#vdropdown').show();	
+			$('#updateDiv').hide();
+			$.get( "http://localhost:8080/AutomobileService/rest/customer/getCust?phoneNo="+$('#updtPhoneNum').val(),
+					function( data ) {
+					$("#custName").val(data['custName']);
+					$("#phoneNo").val(data['phoneNo']);
+					vehicleListG=data.vehicleList;
+					var option = '<option value="">Select a Vehicle</option>';
+					for (var i=0;i<data.vehicleList.length;i++){
+					   option += '<option value="'+ data.vehicleList[i]['vehicleId'] + '">' + 
+					   data.vehicleList[i]['vehicleId'] + '</option>';
+					}
+					$('#vehicleListDD').append(option);
+			});
+			$.get( "http://localhost:8080/AutomobileService/rest/customer/deleteCust?phoneNo="+$('#updtPhoneNum').val(),
+					function( ) {});
+		});
+		
+		
+	  $('#vehicleListDD').change(function(){
+		  var s= $('#vehicleListDD').prop('selectedIndex')-1;
+		  $('#polish').prop( "checked",  vehicleListG[s]['polishing'] );
+		  $('#wheel').prop( "checked",  vehicleListG[s]['wheelBalancing'] );
+		  $('#decor').prop( "checked",  vehicleListG[s]['decors'] );
+		  $("#vehicleId").val(vehicleListG[s]['vehicleId']);
+		  vehicleListG.splice(s,1);
+		  $('#checkboxes').show();
+		  $('#updateCustBtn3').show();
+		  $('#vehicleId').hide();
+		  
+	  });
+		
+	  $('#updateCustBtn3').on('click',function(){
+			
+			var customerName = $("#custName").val();
+			var mobileNumber = $("#phoneNo").val();
+			
+			var updatedVehicle={"vehicleId":$('#vehicleListDD').val(),"polishing":$('#polish').is(':checked'),
+					"wheelBalancing":$('#wheel').is(':checked'),"decors":$('#decor').is(':checked')};
+			vehicleListG.push(updatedVehicle);
+			var cust = {"custName":customerName,"phoneNo":mobileNumber,"vehicleList":vehicleListG};
+			$.ajax({
+				url:"http://localhost:8080/AutomobileService/rest/customer/updateCust",
+				type:"POST",
+				datatype:'html',
+				data:JSON.stringify(cust),
+				contentType:"application/json;charset=utf-8",
+				success:function(data,textStatus,jqXHR){	
+					$('#msg').show();
+					$("#msg").text("Customer updated!");
+					$('#updateCustBtn3').hide();
+				}, 
+				error:function(jqXHR,textStatus,errorThrown){
+					console.log(errorThrown);
+				}
+			})
+				
+		});
+	  $('#deleteCustBtn').on('click',function(){
+			//console.log($('#srchPhoneNum').val());
+			$.get( "http://localhost:8080/AutomobileService/rest/customer/deleteCust?phoneNo="+$('#delPhoneNum').val(),
+					function( ) {});
+		
+		});
+	  $('#getInsurance').on('click',function(){
+			
+			$.get( "http://localhost:8080/Insurance/rest/insurance/getInsurance?vehicleNum="
+					+$('#vehicleNumIns').val()+"&service="+$('#serviceIns').val(),
+					function( data) {
+					$('#msg').show();
+				    $("#msg").text(data);
+			});
+		
+		});
+	  
+	});
+</script>
+</head>
+<body>
+
+<div id="options">
+
+	<input type="button" value="Add Customer" id="addBtn"  class = "btn btn-info btn-lg">
+	<input type="button" value="Retrieve" id="retrieveBtn" class = "btn btn-info btn-lg">
+	<input type="button" value="Update" id="updateBtn" class = "btn btn-info btn-lg">
+	<input type="button" value="Delete" id="deleteBtn" class = "btn btn-info btn-lg">
+	<input type="button" value="Insurance" id="insuranceBtn" class = "btn btn-info btn-lg">
+	<br><br>
+</div>	
+	<div id="nameNum" class="form-group">
+	<label for="custName">Customer Name</label>
+	<input type="text" name="custName" id="custName" class="form-control">
+	<label for="phoneNo">Contact Number</label>
+	<input type="text" name="phoneNo" id="phoneNo"  class="form-control" >
+</div>
+
+<div id="vdropdown">
+<select id="vehicleListDD"></select>
+</div>
+<div id="srchDiv" class="form-group">
+<label for="srchPhoneNum">Contact Number</label>
+	<input type="text" id="srchPhoneNum" class="form-control">
+	<input type="button" id="srchBtn" value="Retrieve" class="btn btn-danger">
+</div>
+<div id="updateDiv" class="form-group">
+<label for="updtPhoneNum">Contact Number</label>
+	<input type="text" id="updtPhoneNum" class="form-control">
+	<input type="button" id="updateCustBtn2" value="Get Details" class="btn btn-danger">
+</div>
+<input type="button" id="updateCustBtn3" value="Update" class="btn btn-danger">
+
+<span id="checkboxes">
+Polishing<input type="checkbox" id="polish" value="Polishing">
+Wheel Balancing<input type="checkbox" id="wheel" value="Wheel Balancing">
+Decorate<input type="checkbox" id="decor" value="Decorate">&nbsp;&nbsp;&nbsp;
+</span>
+<div id="addDiv" class="form-group">	
+	<label for="vehicleId">Vehicle ID</label>
+	<input type="text" name="vehicleId" id="vehicleId"  class="form-control">
+	<input type="button" id="addVehicleBtn" value="+">(To Add Vehicle)<br><br>
+	<input type="button" id="addCustBtn" value ="Add Customer" class="btn btn-danger">
+	
+</div>
+
+<div id="insuranceDiv" class="form-group">
+<label for="vehicleNumIns">Vehicle Number</label>
+	<input type="text" id="vehicleNumIns"  class="form-control"><br>
+	<label for="serviceIns">Service</label>
+	<input type="text" id="serviceIns"  class="form-control">
+	<input type="button" id="getInsurance" value="Get Insurance"  class="btn btn-danger">
+</div>
+<div id="deleteDiv"  class="form-group">
+<label for="delPhoneNum">Delete Customer with Number</label>
+	<input type="text" id="delPhoneNum" class="form-control">
+	<input type="button" id="deleteCustBtn" value="Delete"  class="btn btn-danger">
+</div>
+<p id="msg" style="color:blue"></p>
+</body>
+</html>

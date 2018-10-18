@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Login</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+<script type="text/javascript" src="js/jquery-1.7.2.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script type="text/javascript">
+
+	$(function(){
+	$('#regForm').hide();
+		$("#loginBtn").on('click',function(){
+			$.ajax({
+				url:"http://localhost:8080/AutomobileService/rest/employee/verify",
+				type:"POST",
+				data:$('#loginForm').serialize(),
+				success:function(data,textStatus,jqXHR){	
+					$("#msg").text(data);
+					if(data=="invalid")
+						{
+							$("#msg").text("Incorrect Details, Try Again " + $('#loginForm').serialize());
+						}
+					else{ // if details are correct, name is returned
+							window.location.href="customer.html";
+						}
+				},
+				error:function(jqXHR,textStatus,errorThrown){
+					console.log(errorThrown);
+				}
+			})
+		});
+		$("#reg").on('click',function(){
+			$('#regForm').show();
+			$("#reg").hide();
+			$("#loginForm").hide();
+		});
+		$("#regBtn").on('click',function(){
+			$.ajax({
+				url:"http://localhost:8080/AutomobileService/rest/employee/add",
+				type:"POST",
+				data:$('#regForm').serialize(),
+				success:function(data){	
+					$("#msg").text(data);	
+				}
+			})
+		});
+		
+	});
+</script>
+</head>
+<body>
+<p id="msg" style="color:red"></p>
+<form id="loginForm">
+<div class="form-group">
+<label for="empId">Employee ID</label>
+<input type="text" id="empId" name="empId" class="form-control">
+<label for="empPass">Employee Password</label>
+<input type="password" id="empPass" name="empPass" class="form-control">
+<input type="button" id="loginBtn" value="login" class="btn btn-danger">
+</div>
+</form>
+<a href="#" id="reg">New User? Register Here</a>
+<form id="regForm">
+<div class="form-group">
+	<label for="empNameR">Name</label>
+	<input type="text" id="empNameR" name="empNameR" class="form-control">
+	<label for="empPassR">Enter your desired Password</label>
+	<input type="text" id="empPassR" name="empPassR" class="form-control">
+	<input type="button" id="regBtn" value="Register" class="btn btn-danger">
+	</div>
+</form>
+
+</body>
+</html>
